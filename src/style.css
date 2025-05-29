@@ -6,3 +6,7 @@ html {
   justify-content: center;
   height: 100%;
 }
+
+canvas {
+  outline: 1px solid #fff3;
+}

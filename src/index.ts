@@ -1,37 +1,14 @@
+import type { Ball } from "./entities/ball";
+import type { Floor } from "./entities/floor";
 import { Game } from "./lib/game";
 import { Vector2d } from "./lib/vector";
-import { lineCircle as CollideLineCircle } from "./lib/collide";
+import { applyMovement, applyGravity, handleFloorCollision } from "./update";
+import { drawBackground, drawBall, drawFloor } from "./draw";
 
-type GameState = {
-	ball: {
-		radius: number;
-		position: Vector2d;
-		velocity: Vector2d;
-		bounciness: number;
-		friction: number;
-	};
-	floor: {
-		start: Vector2d;
-		end: Vector2d;
-	};
+export type GameState = {
+	ball: Ball;
+	floor: Floor;
 };
-
-function applyMovement({ ball }: GameState) {
-	ball.position = ball.position.add(ball.velocity);
-}
-
-function handleFloorCollision({ ball, floor }: GameState) {
-	if (CollideLineCircle(floor.start, floor.end, ball.position, ball.radius)) {
-		const velocityDamping = Math.max(0.1, 1 - Math.abs(ball.velocity.y) * 0.05);
-		const effectiveBounciness = ball.bounciness * velocityDamping;
-		ball.velocity.y = -ball.velocity.y * effectiveBounciness;
-		ball.velocity.x *= ball.friction;
-	}
-}
-
-function applyGravity({ ball }: GameState) {
-	ball.velocity.y = Math.min(ball.velocity.y + 0.01, 9);
-}
 
 const game = new Game<GameState>({
 	width: 320 * 2,
@@ -40,10 +17,11 @@ const game = new Game<GameState>({
 		const state = {
 			ball: {
 				radius: 5,
-				position: new Vector2d(this.width / 2, this.height / 2),
-				velocity: new Vector2d(0),
+				position: new Vector2d(16, this.height - 16),
+				velocity: new Vector2d(0.25, -3.0),
 				bounciness: 0.7,
 				friction: 0.98,
+				color: "white",
 			},
 			floor: {
 				start: new Vector2d(0, this.height - 10),
@@ -52,6 +30,7 @@ const game = new Game<GameState>({
 		};
 		return state;
 	},
+
 	update(state, timeMs, deltaMs) {
 		applyMovement(state);
 		handleFloorCollision(state);
@@ -60,19 +39,9 @@ const game = new Game<GameState>({
 	},
 
 	draw(state, timeMs) {
-		this.ctx.fillStyle = "#000";
-		this.ctx.fillRect(0, 0, this.width, this.height);
-		this.ctx.beginPath();
-		this.ctx.arc(...state.ball.position.xy, state.ball.radius, 0, Math.PI * 2);
-		this.ctx.closePath();
-		this.ctx.fillStyle = "#fff";
-		this.ctx.fill();
-
-		this.ctx.strokeStyle = "#fff";
-		this.ctx.beginPath();
-		this.ctx.moveTo(...state.floor.start.xy);
-		this.ctx.lineTo(...state.floor.end.xy);
-		this.ctx.stroke();
+		drawBackground(this.ctx, this.width, this.height);
+		drawFloor(this.ctx, state.floor);
+		drawBall(this.ctx, state.ball);
 	},
 });
 

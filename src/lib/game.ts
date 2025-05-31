@@ -1,6 +1,11 @@
 export type UserInitFunction<T> = (this: Game<T>, state?: T) => T;
-export type UserUpdateFunction<T> = (this: Game<T>, state: T, timeMs: number, deltaMs: number) => T;
-export type UserDrawFunction<T> = (this: Game<T>, state: T, timeMs: number) => void;
+export type UserUpdateFunction<T> = (
+	this: Game<T>,
+	state: T,
+	timeSeconds: number,
+	deltaSeconds: number
+) => T;
+export type UserDrawFunction<T> = (this: Game<T>, state: T, timeSeconds: number) => void;
 
 export type GameOptions<T> = {
 	init: UserInitFunction<T>;
@@ -79,9 +84,10 @@ export class Game<T = unknown> {
 	}
 
 	private tick(timeMs: number): void {
-		const deltaMs = timeMs - (this.lastTick ?? timeMs);
-		this.state = this.update(this.state, timeMs, deltaMs);
-		this.draw(this.state, timeMs);
+		const deltaSeconds = (timeMs - (this.lastTick ?? timeMs)) / 1000;
+		const timeSeconds = timeMs / 1000;
+		this.state = this.update(this.state, timeSeconds, deltaSeconds);
+		this.draw(this.state, timeSeconds);
 		this.lastTick = timeMs;
 	}
 }
